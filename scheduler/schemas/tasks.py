@@ -12,7 +12,6 @@ class TaskStatus(str, Enum):
     active = "active"
     paused = "paused"
 
-
 class TaskCreate(BaseModel):
     name: str = Field(..., example="daily_report")
     description: Optional[str] = None
@@ -26,3 +25,4 @@ class Task(TaskCreate):
     id: int
     status: TaskStatus
     created_at: datetime
+

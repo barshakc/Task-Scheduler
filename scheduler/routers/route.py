@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from typing import List
 from datetime import datetime
-from models.tasks import TaskCreate, Task, TaskStatus
+from schemas.tasks import TaskCreate, Task, TaskStatus
 
 router = APIRouter(tags=["Tasks"])
 
