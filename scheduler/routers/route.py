@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from typing import List
 from datetime import datetime
 from schemas.tasks import TaskCreate, Task, TaskStatus
+from models.task_model import Task as TaskModel, TaskStatus 
 from sqlalchemy.orm import Session
 from db.database import get_db
 
@@ -10,7 +11,7 @@ router = APIRouter(tags=["Tasks"])
 @router.post("/tasks", response_model=Task)
 def create_task(task: TaskCreate, db: Session = Depends(get_db)):
     
-    db_task = Task(
+    db_task = TaskModel(
         name=task.name,
         description=task.description,
         schedule_type=task.schedule_type,
@@ -32,14 +33,14 @@ def get_tasks(db: Session = Depends(get_db)):
 
 @router.get("/tasks/{task_id}", response_model=Task)
 def get_task(task_id: int, db: Session = Depends(get_db)):
-    db_task = db.query(Task).filter(Task.id == task_id).first()
+    db_task = db.query(TaskModel).filter(TaskModel.id == task_id).first()
     if not db_task:
         raise HTTPException(status_code=404, detail="Task not found")
     return db_task
 
 @router.patch("/tasks/{task_id}/pause", response_model=Task)
 def pause_task(task_id: int, db: Session = Depends(get_db)):
-    db_task = db.query(Task).filter(Task.id == task_id).first()
+    db_task = db.query(TaskModel).filter(TaskModel.id == task_id).first()
     if not db_task:
         raise HTTPException(status_code=404, detail="Task not found")
     db_task.status = TaskStatus.paused
@@ -49,7 +50,7 @@ def pause_task(task_id: int, db: Session = Depends(get_db)):
 
 @router.patch("/tasks/{task_id}/resume", response_model=Task)
 def resume_task(task_id: int, db: Session = Depends(get_db)):
-    db_task = db.query(Task).filter(Task.id == task_id).first()
+    db_task = db.query(TaskModel).filter(TaskModel.id == task_id).first()
     if not db_task:
         raise HTTPException(status_code=404, detail="Task not found")
     db_task.status = TaskStatus.active
@@ -59,7 +60,7 @@ def resume_task(task_id: int, db: Session = Depends(get_db)):
 
 @router.delete("/tasks/{task_id}")
 def delete_task(task_id: int, db: Session = Depends(get_db)):
-    db_task = db.query(Task).filter(Task.id == task_id).first()
+    db_task = db.query(TaskModel).filter(TaskModel.id == task_id).first()
     if not db_task:
         raise HTTPException(status_code=404, detail="Task not found")
     db.delete(db_task)
