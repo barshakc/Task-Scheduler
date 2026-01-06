@@ -5,5 +5,4 @@ from db.database import engine, Base
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Task Scheduler API")
-
 app.include_router(tasks_router)

@@ -26,3 +26,5 @@ class Task(TaskCreate):
     status: TaskStatus
     created_at: datetime
 
+    class Config:
+        orm_mode = True
