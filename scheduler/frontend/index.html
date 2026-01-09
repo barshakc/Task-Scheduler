@@ -1,34 +1,162 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Bootstrap demo</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
+      crossorigin="anonymous"
+    />
   </head>
   <body>
     <div class="container my-4">
-    <h1 class="mb-4">Task Scheduler Dashboard</h1>
-    <!-- Task table will go here -->
-    <button class="btn btn-primary mb-3" id="newTaskBtn">New Task</button>
-    <table class="table table-striped" id="tasksTable">
-  <thead>
-    <tr>
-      <th>ID</th>
-      <th>Name</th>
-      <th>Status</th>
-      <th>Schedule Type</th>
-      <th>Next Run</th>
-      <th>Actions</th>
-    </tr>
-  </thead>
-  <tbody>
-    <!-- Task rows will be populated via JS -->
-  </tbody>
-    </table>
+      <h1 class="mb-4">Task Scheduler Dashboard</h1>
+      <!-- Task table will go here -->
+      <button class="btn btn-primary mb-3" 
+        data-bs-toggle="modal" 
+        data-bs-target="#createTaskModal">
+  New Task
+</button>
 
+      <div
+        class="modal fade"
+        id="createTaskModal"
+        tabindex="-1"
+        aria-hidden="true"
+      >
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Create New Task</h5>
+              <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <div class="modal-body">
+              <form id="createTaskForm">
+                <div class="mb-3">
+                  <label for="taskName" class="form-label">Name</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="taskName"
+                    name="name"
+                    required
+                  />
+                </div>
+
+                <div class="mb-3">
+                  <label for="taskDescription" class="form-label"
+                    >Description</label
+                  >
+                  <textarea
+                    class="form-control"
+                    id="taskDescription"
+                    name="description"
+                  ></textarea>
+                </div>
+
+                <div class="mb-3">
+                  <label for="taskScheduleType" class="form-label"
+                    >Schedule Type</label
+                  >
+                  <select
+                    class="form-select"
+                    id="taskScheduleType"
+                    name="schedule_type"
+                    required
+                  >
+                    <option value="once">Once</option>
+                    <option value="interval">Interval</option>
+                    <option value="cron">Cron</option>
+                  </select>
+                </div>
+
+                <div class="mb-3">
+                  <label for="taskScheduleValue" class="form-label"
+                    >Schedule Value</label
+                  >
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="taskScheduleValue"
+                    name="schedule_value"
+                    required
+                  />
+                </div>
+
+                <div class="mb-3">
+                  <label for="taskMaxRetries" class="form-label"
+                    >Max Retries</label
+                  >
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="taskMaxRetries"
+                    name="max_retries"
+                    value="3"
+                  />
+                </div>
+
+                <div class="mb-3">
+                  <label for="taskRetryDelay" class="form-label"
+                    >Retry Delay (seconds)</label
+                  >
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="taskRetryDelay"
+                    name="retry_delay"
+                    value="60"
+                  />
+                </div>
+
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button
+                type="submit"
+                form="createTaskForm"
+                class="btn btn-success"
+              >
+                Create Task
+              </button>
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-bs-dismiss="modal"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <table class="table table-striped" id="tasksTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Status</th>
+            <th>Schedule Type</th>
+            <th>Next Run</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Task rows will be populated via JS -->
+        </tbody>
+      </table>
     </div>
-        <script src="main.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="main.js"></script>
 
   </body>
 </html>
