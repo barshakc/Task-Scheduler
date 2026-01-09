@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, JSON, Enum, DateTime
+from sqlalchemy import Column, Integer, String, JSON, Enum, DateTime, ForeignKey
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from db.database import Base
 from models.enums import ScheduleType, TaskStatus
@@ -16,3 +17,6 @@ class Task(Base):
     payload = Column(JSON, nullable=True)
     status = Column(Enum(TaskStatus), default=TaskStatus.active)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    user = relationship("User", back_populates="tasks")
