@@ -1,8 +1,11 @@
 from fastapi import FastAPI
-from routers.route import router as tasks_router
-from db.database import engine, Base
-
-Base.metadata.create_all(bind=engine)
+from fastapi.staticfiles import StaticFiles
+from routers import route  # your tasks router
 
 app = FastAPI(title="Task Scheduler API")
-app.include_router(tasks_router)
+
+# Include your API router
+app.include_router(route.router)
+
+# Serve frontend
+app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
