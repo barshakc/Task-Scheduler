@@ -1,16 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import Optional, Dict
 from datetime import datetime
-from enum import Enum
-
-class ScheduleType(str, Enum):
-    once = "once"
-    interval = "interval"
-    cron = "cron"
-
-class TaskStatus(str, Enum):
-    active = "active"
-    paused = "paused"
+from models.enums import ScheduleType, TaskStatus
 
 class TaskCreate(BaseModel):
     name: str = Field(..., example="daily_report")

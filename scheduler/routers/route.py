@@ -1,16 +1,16 @@
 from fastapi import APIRouter, HTTPException, Depends
 from typing import List
-from datetime import datetime
-from schemas.tasks import TaskCreate, Task, TaskStatus
-from models.task_model import Task as TaskModel, TaskStatus 
 from sqlalchemy.orm import Session
+
 from db.database import get_db
+from models.task_model import Task as TaskModel
+from schemas.tasks import TaskCreate, Task
+from models.enums import TaskStatus
 
 router = APIRouter(tags=["Tasks"])
 
 @router.post("/tasks", response_model=Task)
 def create_task(task: TaskCreate, db: Session = Depends(get_db)):
-    
     db_task = TaskModel(
         name=task.name,
         description=task.description,
@@ -21,15 +21,16 @@ def create_task(task: TaskCreate, db: Session = Depends(get_db)):
         payload=task.payload,
         status=TaskStatus.active,
     )
-    
     db.add(db_task)
     db.commit()
-    db.refresh(db_task)  
+    db.refresh(db_task)
     return db_task
+
 
 @router.get("/tasks", response_model=List[Task])
 def get_tasks(db: Session = Depends(get_db)):
-    return db.query(Task).all()
+    return db.query(TaskModel).all()
+
 
 @router.get("/tasks/{task_id}", response_model=Task)
 def get_task(task_id: int, db: Session = Depends(get_db)):
@@ -37,6 +38,7 @@ def get_task(task_id: int, db: Session = Depends(get_db)):
     if not db_task:
         raise HTTPException(status_code=404, detail="Task not found")
     return db_task
+
 
 @router.patch("/tasks/{task_id}/pause", response_model=Task)
 def pause_task(task_id: int, db: Session = Depends(get_db)):
@@ -48,6 +50,7 @@ def pause_task(task_id: int, db: Session = Depends(get_db)):
     db.refresh(db_task)
     return db_task
 
+
 @router.patch("/tasks/{task_id}/resume", response_model=Task)
 def resume_task(task_id: int, db: Session = Depends(get_db)):
     db_task = db.query(TaskModel).filter(TaskModel.id == task_id).first()
@@ -57,6 +60,7 @@ def resume_task(task_id: int, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_task)
     return db_task
+
 
 @router.delete("/tasks/{task_id}")
 def delete_task(task_id: int, db: Session = Depends(get_db)):

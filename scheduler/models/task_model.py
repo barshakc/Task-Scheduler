@@ -1,17 +1,7 @@
 from sqlalchemy import Column, Integer, String, JSON, Enum, DateTime
 from sqlalchemy.sql import func
-from sqlalchemy.ext.declarative import declarative_base
-from enum import Enum as PyEnum
 from db.database import Base
-
-class ScheduleType(str, PyEnum):
-    once = "once"
-    interval = "interval"
-    cron = "cron"
-
-class TaskStatus(str, PyEnum):
-    active = "active"
-    paused = "paused"
+from models.enums import ScheduleType, TaskStatus
 
 class Task(Base):
     __tablename__ = "tasks"
