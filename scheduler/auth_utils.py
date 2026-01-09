@@ -7,10 +7,8 @@ from db.database import get_db
 from models.user_model import User
 from core.config import settings
 
-# OAuth2
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 
-# Token utils
 def create_access_token(data: dict):
     from datetime import datetime, timedelta
     to_encode = data.copy()
@@ -18,14 +16,12 @@ def create_access_token(data: dict):
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, settings.SECRET_KEY, algorithm="HS256")
 
-# Password utils
 def hash_password(password: str) -> str:
     return argon2.hash(password)
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return argon2.verify(plain_password, hashed_password)
 
-# Get current user
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
