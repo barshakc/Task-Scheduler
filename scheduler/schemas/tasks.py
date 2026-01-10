@@ -19,3 +19,12 @@ class Task(TaskCreate):
 
     class Config:
         from_attributes = True
+
+class TaskUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    schedule_type: Optional[ScheduleType] = None
+    schedule_value: Optional[str] = None
+    max_retries: Optional[int] = None
+    retry_delay: Optional[int] = None
+    payload: Optional[Dict] = None

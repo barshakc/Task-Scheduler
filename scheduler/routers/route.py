@@ -40,6 +40,28 @@ def get_task(task_id: int, db: Session = Depends(get_db), current_user: User = D
         raise HTTPException(status_code=404, detail="Task not found")
     return db_task
 
+@router.patch("/tasks/{task_id}", response_model=Task)
+def update_task(
+    task_id: int,
+    task: TaskUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    db_task = db.query(TaskModel).filter(
+        TaskModel.id == task_id,
+        TaskModel.user_id == current_user.id
+    ).first()
+
+    if not db_task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    for key, value in task.dict(exclude_unset=True).items():
+        setattr(db_task, key, value)
+
+    db.commit()
+    db.refresh(db_task)
+    return db_task
+
 @router.patch("/tasks/{task_id}/pause", response_model=Task)
 def pause_task(task_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     db_task = db.query(TaskModel).filter(TaskModel.id == task_id, TaskModel.user_id == current_user.id).first()
@@ -59,6 +81,7 @@ def resume_task(task_id: int, db: Session = Depends(get_db), current_user: User 
     db.commit()
     db.refresh(db_task)
     return db_task
+
 
 @router.delete("/tasks/{task_id}")
 def delete_task(task_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
