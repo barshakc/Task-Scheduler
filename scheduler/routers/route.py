@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from db.database import get_db
 from models.task_model import Task as TaskModel
-from schemas.tasks import TaskCreate, Task
+from schemas.tasks import TaskCreate, TaskUpdate, Task
 from models.enums import TaskStatus
 from auth_utils import get_current_user
 from models.user_model import User
