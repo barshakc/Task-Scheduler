@@ -6,6 +6,8 @@ celery_app = Celery(
     backend='redis://localhost:6379/1'
 )
 
+import scheduler.tasks.worker_tasks
+
 celery_app.conf.update(
     task_serializer='json',
     accept_content=['json'],

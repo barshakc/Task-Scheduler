@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import Optional, Dict
 from datetime import datetime
-from models.enums import ScheduleType, TaskStatus
+from scheduler.models.enums import ScheduleType, TaskStatus
 
 class TaskCreate(BaseModel):
     name: str = Field(..., example="daily_report")

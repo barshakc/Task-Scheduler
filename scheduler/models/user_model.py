@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import relationship
-from db.database import Base
+from scheduler.db.database import Base
 from passlib.hash import bcrypt
 
 class User(Base):

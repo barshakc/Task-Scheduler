@@ -2,12 +2,13 @@ from fastapi import APIRouter, HTTPException, Depends
 from typing import List
 from sqlalchemy.orm import Session
 
-from db.database import get_db
-from models.task_model import Task as TaskModel
-from schemas.tasks import TaskCreate, TaskUpdate, Task
-from models.enums import TaskStatus
-from auth_utils import get_current_user
-from models.user_model import User
+from scheduler.db.database import get_db
+from scheduler.models.task_model import Task as TaskModel
+from scheduler.schemas.tasks import TaskCreate, TaskUpdate, Task
+from scheduler.models.enums import TaskStatus
+from scheduler.auth_utils import get_current_user
+from scheduler.models.user_model import User
+from scheduler.tasks.worker_tasks import run_task
 
 router = APIRouter(tags=["Tasks"])
 
@@ -91,3 +92,14 @@ def delete_task(task_id: int, db: Session = Depends(get_db), current_user: User 
     db.delete(db_task)
     db.commit()
     return {"detail": "Task deleted"}
+
+from scheduler.tasks.worker_tasks import run_task
+
+@router.post("/tasks/{task_id}/run")
+def trigger_task(task_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    task = db.query(TaskModel).filter(TaskModel.id == task_id, TaskModel.user_id == current_user.id).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    run_task.delay(task.id, task.name)
+    return {"detail": f"Task {task.name} is scheduled to run"}

@@ -1,8 +1,8 @@
 from sqlalchemy import Column, Integer, String, JSON, Enum, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from db.database import Base
-from models.enums import ScheduleType, TaskStatus
+from scheduler.db.database import Base
+from scheduler.models.enums import ScheduleType, TaskStatus
 
 class Task(Base):
     __tablename__ = "tasks"
