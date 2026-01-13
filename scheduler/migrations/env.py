@@ -7,6 +7,8 @@ from scheduler.core.config import settings  # your DATABASE_URL
 from scheduler.db.database import Base
 from scheduler.models.user_model import User
 from scheduler.models.task_model import Task
+from scheduler.models.task_run_model import TaskRun
+
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
