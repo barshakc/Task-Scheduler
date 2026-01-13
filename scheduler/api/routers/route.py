@@ -153,6 +153,7 @@ def trigger_task(
         .filter(TaskModel.id == task_id, TaskModel.user_id == current_user.id)
         .first()
     )
+
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
 
@@ -163,9 +164,19 @@ def trigger_task(
     db.commit()
     db.refresh(task_run)
 
-    run_task.delay(task.id, task.name, payload=task.payload)
+    celery_result = run_task.apply_async(
+        kwargs={
+            "task_id": task.id,
+            "task_name": task.name,
+            "payload": task.payload,
+            "task_run_id": task_run.id,
+        }
+    )
 
-    return {"detail": f"Task '{task.name}' is scheduled to run", "run_id": task_run.id}
+    task_run.celery_task_id = celery_result.id
+    db.commit()
+
+    return {"detail": f"Task '{task.name}' scheduled", "task_run_id": task_run.id}
 
 
 @router.get("/tasks/{task_id}/runs", response_model=List[TaskRunSchema])
