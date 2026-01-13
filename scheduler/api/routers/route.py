@@ -14,8 +14,13 @@ from api.schemas.task_runs import TaskRun as TaskRunSchema
 
 router = APIRouter(tags=["Tasks"])
 
+
 @router.post("/tasks", response_model=Task)
-def create_task(task: TaskCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def create_task(
+    task: TaskCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     db_task = TaskModel(
         name=task.name,
         description=task.description,
@@ -25,23 +30,36 @@ def create_task(task: TaskCreate, db: Session = Depends(get_db), current_user: U
         retry_delay=task.retry_delay,
         payload=task.payload,
         status=TaskStatus.active,
-        user_id=current_user.id  
+        user_id=current_user.id,
     )
     db.add(db_task)
     db.commit()
     db.refresh(db_task)
     return db_task
 
+
 @router.get("/tasks", response_model=List[Task])
-def get_tasks(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def get_tasks(
+    db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
+):
     return db.query(TaskModel).filter(TaskModel.user_id == current_user.id).all()
 
+
 @router.get("/tasks/{task_id}", response_model=Task)
-def get_task(task_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    db_task = db.query(TaskModel).filter(TaskModel.id == task_id, TaskModel.user_id == current_user.id).first()
+def get_task(
+    task_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    db_task = (
+        db.query(TaskModel)
+        .filter(TaskModel.id == task_id, TaskModel.user_id == current_user.id)
+        .first()
+    )
     if not db_task:
         raise HTTPException(status_code=404, detail="Task not found")
     return db_task
+
 
 @router.patch("/tasks/{task_id}", response_model=Task)
 def update_task(
@@ -50,10 +68,11 @@ def update_task(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    db_task = db.query(TaskModel).filter(
-        TaskModel.id == task_id,
-        TaskModel.user_id == current_user.id
-    ).first()
+    db_task = (
+        db.query(TaskModel)
+        .filter(TaskModel.id == task_id, TaskModel.user_id == current_user.id)
+        .first()
+    )
 
     if not db_task:
         raise HTTPException(status_code=404, detail="Task not found")
@@ -65,9 +84,18 @@ def update_task(
     db.refresh(db_task)
     return db_task
 
+
 @router.patch("/tasks/{task_id}/pause", response_model=Task)
-def pause_task(task_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    db_task = db.query(TaskModel).filter(TaskModel.id == task_id, TaskModel.user_id == current_user.id).first()
+def pause_task(
+    task_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    db_task = (
+        db.query(TaskModel)
+        .filter(TaskModel.id == task_id, TaskModel.user_id == current_user.id)
+        .first()
+    )
     if not db_task:
         raise HTTPException(status_code=404, detail="Task not found")
     db_task.status = TaskStatus.paused
@@ -75,9 +103,18 @@ def pause_task(task_id: int, db: Session = Depends(get_db), current_user: User =
     db.refresh(db_task)
     return db_task
 
+
 @router.patch("/tasks/{task_id}/resume", response_model=Task)
-def resume_task(task_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    db_task = db.query(TaskModel).filter(TaskModel.id == task_id, TaskModel.user_id == current_user.id).first()
+def resume_task(
+    task_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    db_task = (
+        db.query(TaskModel)
+        .filter(TaskModel.id == task_id, TaskModel.user_id == current_user.id)
+        .first()
+    )
     if not db_task:
         raise HTTPException(status_code=404, detail="Task not found")
     db_task.status = TaskStatus.active
@@ -87,8 +124,16 @@ def resume_task(task_id: int, db: Session = Depends(get_db), current_user: User 
 
 
 @router.delete("/tasks/{task_id}")
-def delete_task(task_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    db_task = db.query(TaskModel).filter(TaskModel.id == task_id, TaskModel.user_id == current_user.id).first()
+def delete_task(
+    task_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    db_task = (
+        db.query(TaskModel)
+        .filter(TaskModel.id == task_id, TaskModel.user_id == current_user.id)
+        .first()
+    )
     if not db_task:
         raise HTTPException(status_code=404, detail="Task not found")
     db.delete(db_task)
@@ -100,20 +145,19 @@ def delete_task(task_id: int, db: Session = Depends(get_db), current_user: User 
 def trigger_task(
     task_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
 
-    task = db.query(TaskModel).filter(
-        TaskModel.id == task_id,
-        TaskModel.user_id == current_user.id
-    ).first()
+    task = (
+        db.query(TaskModel)
+        .filter(TaskModel.id == task_id, TaskModel.user_id == current_user.id)
+        .first()
+    )
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
 
     task_run = TaskRun(
-        task_id=task.id,
-        user_id=current_user.id,
-        status=TaskStatus.active
+        task_id=task.id, user_id=current_user.id, status=TaskStatus.active
     )
     db.add(task_run)
     db.commit()
@@ -121,29 +165,28 @@ def trigger_task(
 
     run_task.delay(task.id, task.name, payload=task.payload)
 
-    return {
-        "detail": f"Task '{task.name}' is scheduled to run",
-        "run_id": task_run.id
-    }
+    return {"detail": f"Task '{task.name}' is scheduled to run", "run_id": task_run.id}
 
 
 @router.get("/tasks/{task_id}/runs", response_model=List[TaskRunSchema])
 def get_task_runs(
     task_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
-    
-    task = db.query(TaskModel).filter(
-        TaskModel.id == task_id,
-        TaskModel.user_id == current_user.id
-    ).first()
+
+    task = (
+        db.query(TaskModel)
+        .filter(TaskModel.id == task_id, TaskModel.user_id == current_user.id)
+        .first()
+    )
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
 
-    runs = db.query(TaskRun).filter(
-        TaskRun.task_id == task_id,
-        TaskRun.user_id == current_user.id
-    ).all()
+    runs = (
+        db.query(TaskRun)
+        .filter(TaskRun.task_id == task_id, TaskRun.user_id == current_user.id)
+        .all()
+    )
 
     return runs

@@ -3,6 +3,7 @@ from typing import Optional, Dict
 from datetime import datetime
 from scheduler.models.enums import ScheduleType, TaskStatus
 
+
 class TaskCreate(BaseModel):
     name: str = Field(..., example="daily_report")
     description: Optional[str] = None
@@ -12,6 +13,7 @@ class TaskCreate(BaseModel):
     retry_delay: int = 60
     payload: Optional[Dict] = None
 
+
 class Task(TaskCreate):
     id: int
     status: TaskStatus
@@ -19,6 +21,7 @@ class Task(TaskCreate):
 
     class Config:
         from_attributes = True
+
 
 class TaskUpdate(BaseModel):
     name: Optional[str] = None

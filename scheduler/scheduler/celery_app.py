@@ -9,7 +9,7 @@ load_dotenv(dotenv_path=env_path)
 celery_app = Celery(
     "task_scheduler",
     broker=os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379/0"),
-    backend=os.environ.get("CELERY_RESULT_BACKEND", "redis://localhost:6379/1")
+    backend=os.environ.get("CELERY_RESULT_BACKEND", "redis://localhost:6379/1"),
 )
 
 from scheduler.models import User, Task, TaskRun

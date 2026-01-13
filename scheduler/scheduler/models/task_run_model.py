@@ -4,6 +4,7 @@ from sqlalchemy.sql import func
 from scheduler.db.database import Base
 from scheduler.models.enums import ScheduleType, TaskStatus
 
+
 class TaskRun(Base):
     __tablename__ = "task_runs"
 

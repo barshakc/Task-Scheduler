@@ -4,6 +4,7 @@ from sqlalchemy.sql import func
 from scheduler.db.database import Base
 from scheduler.models.enums import ScheduleType, TaskStatus
 
+
 class Task(Base):
     __tablename__ = "tasks"
 
@@ -20,5 +21,5 @@ class Task(Base):
 
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     user = relationship("User", back_populates="tasks")
-    
+
     runs = relationship("TaskRun", back_populates="task")
