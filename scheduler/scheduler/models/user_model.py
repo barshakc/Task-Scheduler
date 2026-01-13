@@ -11,6 +11,7 @@ class User(Base):
     hashed_password = Column(String, nullable=False)
  
     tasks = relationship("Task", back_populates="user")
+    task_runs = relationship("TaskRun", back_populates="user")
 
     def verify_password(self, password: str) -> bool:
         return bcrypt.verify(password, self.hashed_password)

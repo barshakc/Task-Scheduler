@@ -19,3 +19,4 @@ class TaskRun(Base):
     finished_at = Column(DateTime(timezone=True), nullable=True)
 
     task = relationship("Task", back_populates="runs")
+    user = relationship("User", back_populates="task_runs")
