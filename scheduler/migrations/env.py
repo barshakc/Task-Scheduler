@@ -3,10 +3,10 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 from logging.config import fileConfig
 from alembic import context
-from core.config import settings  # your DATABASE_URL
-from db.database import Base
-from models.user_model import User
-from models.task_model import Task
+from scheduler.core.config import settings  # your DATABASE_URL
+from scheduler.db.database import Base
+from scheduler.models.user_model import User
+from scheduler.models.task_model import Task
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool

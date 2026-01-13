@@ -6,7 +6,7 @@ from scheduler.db.database import get_db
 from scheduler.models.task_model import Task as TaskModel
 from scheduler.schemas.tasks import TaskCreate, TaskUpdate, Task
 from scheduler.models.enums import TaskStatus
-from scheduler.auth_utils import get_current_user
+from scheduler.api.auth_utils import get_current_user
 from scheduler.models.user_model import User
 from scheduler.tasks.worker_tasks import run_task
 

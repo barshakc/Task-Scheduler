@@ -1,4 +1,4 @@
-from scheduler.celery_app import celery_app
+from scheduler.scheduler.celery_app import celery_app
 import time
 
 @celery_app.task(name="scheduler.tasks.worker_tasks.run_task")
