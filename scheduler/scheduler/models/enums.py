@@ -8,3 +8,5 @@ class ScheduleType(str, Enum):
 class TaskStatus(str, Enum):
     active = "active"
     paused = "paused"
+    finished = "finished"
+    failed = "failed"

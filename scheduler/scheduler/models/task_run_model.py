@@ -10,6 +10,7 @@ class TaskRun(Base):
     id = Column(Integer, primary_key=True, index=True)
 
     task_id = Column(Integer, ForeignKey("tasks.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     celery_task_id = Column(String, index=True, nullable=True)
 
     status = Column(Enum(TaskStatus), nullable=False)

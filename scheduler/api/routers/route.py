@@ -95,23 +95,55 @@ def delete_task(task_id: int, db: Session = Depends(get_db), current_user: User 
     db.commit()
     return {"detail": "Task deleted"}
 
-@router.post("/tasks/{task_id}/run")
-def trigger_task(task_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
 
-    task = db.query(TaskModel).filter(TaskModel.id == task_id, TaskModel.user_id == current_user.id).first()
+@router.post("/tasks/{task_id}/run")
+def trigger_task(
+    task_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+
+    task = db.query(TaskModel).filter(
+        TaskModel.id == task_id,
+        TaskModel.user_id == current_user.id
+    ).first()
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
+
+    task_run = TaskRun(
+        task_id=task.id,
+        user_id=current_user.id,
+        status=TaskStatus.active
+    )
+    db.add(task_run)
+    db.commit()
+    db.refresh(task_run)
 
     run_task.delay(task.id, task.name, payload=task.payload)
 
-    return {"detail": f"Task '{task.name}' is scheduled to run"}
+    return {
+        "detail": f"Task '{task.name}' is scheduled to run",
+        "run_id": task_run.id
+    }
 
 
 @router.get("/tasks/{task_id}/runs", response_model=List[TaskRunSchema])
-def get_task_runs(task_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    task = db.query(TaskModel).filter(TaskModel.id == task_id, TaskModel.user_id == current_user.id).first()
+def get_task_runs(
+    task_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    
+    task = db.query(TaskModel).filter(
+        TaskModel.id == task_id,
+        TaskModel.user_id == current_user.id
+    ).first()
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
-    
-    runs = db.query(TaskRun).filter(TaskRun.task_id == task_id).all()
+
+    runs = db.query(TaskRun).filter(
+        TaskRun.task_id == task_id,
+        TaskRun.user_id == current_user.id
+    ).all()
+
     return runs

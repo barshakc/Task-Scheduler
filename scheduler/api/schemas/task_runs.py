@@ -7,8 +7,8 @@ class TaskRunBase(BaseModel):
     task_id: int
     status: TaskStatus
     started_at: Optional[datetime]
-    finished_at: Optional[datetime]
-    result: Optional[dict]
+    finished_at: Optional[datetime] = None
+    result: Optional[dict] = None
 
 class TaskRun(TaskRunBase):
     id: int
