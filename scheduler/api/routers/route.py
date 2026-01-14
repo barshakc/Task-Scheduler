@@ -31,6 +31,7 @@ def create_task(
         max_retries=task.max_retries,
         retry_delay=task.retry_delay,
         payload=task.payload,
+        max_runs=task.max_runs, 
         status=TaskStatus.active,
         user_id=current_user.id,
         next_run=datetime.now(timezone.utc),  # first run immediately

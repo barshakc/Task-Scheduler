@@ -12,7 +12,6 @@ from sqlalchemy.exc import IntegrityError
 engine = create_engine(settings.DATABASE_URL)
 SessionLocal = sessionmaker(bind=engine)
 
-
 @shared_task(name="scheduler.tasks.scheduler_tasks.poll_and_schedule_tasks")
 def poll_and_schedule_tasks():
     db = SessionLocal()
@@ -27,6 +26,14 @@ def poll_and_schedule_tasks():
 
         for task in active_tasks:
 
+            runs_count = db.query(TaskRun).filter(TaskRun.task_id == task.id).count()
+
+            if task.max_runs is not None and runs_count >= task.max_runs:
+                task.status = TaskStatus.finished
+                task.next_run = None
+                db.commit()
+                continue
+
             active_run = (
                 db.query(TaskRun)
                 .filter(TaskRun.task_id == task.id, TaskRun.status == TaskStatus.active)
@@ -36,7 +43,6 @@ def poll_and_schedule_tasks():
                 continue
 
             try:
-
                 task_run = TaskRun(
                     task_id=task.id, user_id=task.user_id, status=TaskStatus.active
                 )

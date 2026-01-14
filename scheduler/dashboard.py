@@ -206,6 +206,9 @@ elif menu == "Dashboard":
             schedule_type = st.selectbox("Schedule Type", ["once", "interval"])
             schedule_value = st.text_input("Schedule Value")
             payload = st.text_area("Payload (JSON)", "{}")
+            max_runs = st.number_input("Max Runs (leave empty for unlimited)", min_value=1, step=1, value=1)
+
+
             submitted = st.form_submit_button("Create Task")
             if submitted:
                 try:
@@ -215,6 +218,7 @@ elif menu == "Dashboard":
                         "description": description,
                         "schedule_type": schedule_type,
                         "schedule_value": schedule_value,
+                        "max_runs": max_runs,
                         "payload": payload_dict
                     }
                     r = requests.post(f"{API_URL}/tasks", json=data, headers=headers)

@@ -3,35 +3,16 @@ from typing import Optional, Dict
 from datetime import datetime
 from scheduler.models.enums import ScheduleType, TaskStatus
 
-
 class TaskCreate(BaseModel):
-    name: str = Field(
-        ..., example="Send Welcome Message", description="Unique name of the task"
-    )
-    description: Optional[str] = Field(
-        None, example="Send a welcome message to new users"
-    )
-    schedule_type: ScheduleType = Field(
-        ...,
-        example="interval",
-        description="How the task should run: manual, interval, or cron",
-    )
-    schedule_value: str = Field(
-        ...,
-        example="60",
-        description="Interval in seconds or cron expression, depending on schedule_type",
-    )
-    max_retries: Optional[int] = Field(
-        3, description="Number of times to retry if the task fails"
-    )
-    retry_delay: Optional[int] = Field(
-        60, description="Delay in seconds between retries"
-    )
-    payload: Optional[Dict] = Field(
-        None,
-        example={"recipient": "+123456789", "message": "Welcome!"},
-        description="Data the task needs to execute",
-    )
+    name: str
+    description: str | None = None
+    schedule_type: ScheduleType
+    schedule_value: str
+    max_runs: int | None = None   
+    next_run: datetime | None = None 
+    max_retries: int = 0
+    retry_delay: int = 0
+    payload: dict
 
 
 class TaskUpdate(BaseModel):
@@ -41,6 +22,7 @@ class TaskUpdate(BaseModel):
     schedule_value: Optional[str] = None
     max_retries: Optional[int] = None
     retry_delay: Optional[int] = None
+    max_runs: int | None = None  
     payload: Optional[Dict] = None
 
 
@@ -48,7 +30,7 @@ class Task(TaskCreate):
     id: int
     status: TaskStatus
     created_at: datetime
-    next_run: datetime
+    next_run: datetime | None = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True

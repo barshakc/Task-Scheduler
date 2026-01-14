@@ -17,11 +17,12 @@ class Task(Base):
     max_retries = Column(Integer, default=3)
     retry_delay = Column(Integer, default=60)
     payload = Column(JSON, nullable=True)
+    max_runs = Column(Integer, nullable=True)
     status = Column(Enum(TaskStatus), default=TaskStatus.active)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     next_run = Column(
         DateTime(timezone=True),
-        nullable=False,
+        nullable=True,
         default=lambda: datetime.now(timezone.utc),
     )
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
