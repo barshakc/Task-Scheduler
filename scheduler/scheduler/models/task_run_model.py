@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, JSON, Enum, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, JSON, Enum, DateTime, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from scheduler.db.database import Base
@@ -10,7 +10,7 @@ class TaskRun(Base):
 
     id = Column(Integer, primary_key=True, index=True)
 
-    task_id = Column(Integer, ForeignKey("tasks.id"), nullable=False)
+    task_id = Column(Integer, ForeignKey("tasks.id", ondelete="CASCADE"), nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     celery_task_id = Column(String, index=True, nullable=True)
 
@@ -20,5 +20,10 @@ class TaskRun(Base):
     started_at = Column(DateTime(timezone=True), server_default=func.now())
     finished_at = Column(DateTime(timezone=True), nullable=True)
 
-    task = relationship("Task", back_populates="runs")
+    task = relationship("Task", back_populates="task_runs")
     user = relationship("User", back_populates="task_runs")
+
+
+    __table_args__ = (
+        UniqueConstraint('task_id', 'status', name='uq_task_active_run'),
+    )

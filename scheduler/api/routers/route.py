@@ -11,16 +11,16 @@ from scheduler.models.user_model import User
 from scheduler.tasks.worker_tasks import run_task
 from scheduler.models.task_run_model import TaskRun
 from api.schemas.task_runs import TaskRun as TaskRunSchema
+from datetime import datetime, timezone
 
 router = APIRouter(tags=["Tasks"])
 
 
-@router.post("/tasks", response_model=Task)
-def create_task(
-    task: TaskCreate,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+@router.post("/tasks")
+def create_task(task: TaskCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """
+    Create a new task for the current user.
+    """
     db_task = TaskModel(
         name=task.name,
         description=task.description,
@@ -31,12 +31,13 @@ def create_task(
         payload=task.payload,
         status=TaskStatus.active,
         user_id=current_user.id,
+        next_run=datetime.now(timezone.utc),  # first run immediately
     )
+
     db.add(db_task)
     db.commit()
     db.refresh(db_task)
     return db_task
-
 
 @router.get("/tasks", response_model=List[Task])
 def get_tasks(
@@ -142,24 +143,30 @@ def delete_task(
 
 
 @router.post("/tasks/{task_id}/run")
-def trigger_task(
-    task_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+def trigger_task(task_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
 
-    task = (
-        db.query(TaskModel)
-        .filter(TaskModel.id == task_id, TaskModel.user_id == current_user.id)
-        .first()
-    )
+    task = db.query(TaskModel).filter(
+        TaskModel.id == task_id,
+        TaskModel.user_id == current_user.id
+    ).first()
 
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
 
+    active_run = db.query(TaskRun).filter(
+        TaskRun.task_id == task.id,
+        TaskRun.status == TaskStatus.active
+    ).first()
+
+    if active_run:
+        raise HTTPException(status_code=400, detail="Task already running")
+
     task_run = TaskRun(
-        task_id=task.id, user_id=current_user.id, status=TaskStatus.active
+        task_id=task.id,
+        user_id=current_user.id,
+        status=TaskStatus.active,
     )
+
     db.add(task_run)
     db.commit()
     db.refresh(task_run)
@@ -176,7 +183,7 @@ def trigger_task(
     task_run.celery_task_id = celery_result.id
     db.commit()
 
-    return {"detail": f"Task '{task.name}' scheduled", "task_run_id": task_run.id}
+    return {"task_run_id": task_run.id}
 
 
 @router.get("/tasks/{task_id}/runs", response_model=List[TaskRunSchema])
