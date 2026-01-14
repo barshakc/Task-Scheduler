@@ -3,7 +3,6 @@ from pathlib import Path
 from dotenv import load_dotenv
 import os
 
-# Load environment variables
 env_path = Path(__file__).resolve().parent.parent / ".env"
 load_dotenv(dotenv_path=env_path)
 
@@ -21,15 +20,14 @@ celery_app.conf.update(
     enable_utc=True,
 )
 
-# --- CELERY BEAT SCHEDULE ---
-# Poll DB every 30 seconds to schedule tasks
+
 celery_app.conf.beat_schedule = {
-    'poll-and-schedule-tasks-every-30-seconds': {
-        'task': 'scheduler.tasks.scheduler_tasks.poll_and_schedule_tasks',
-        'schedule': 30.0,  # seconds
+    "poll-and-schedule-tasks-every-30-seconds": {
+        "task": "scheduler.tasks.scheduler_tasks.poll_and_schedule_tasks",
+        "schedule": 30.0,
     },
 }
 
-# Autodiscover tasks in scheduler.tasks
+
 import scheduler.tasks.scheduler_tasks
 import scheduler.tasks.worker_tasks

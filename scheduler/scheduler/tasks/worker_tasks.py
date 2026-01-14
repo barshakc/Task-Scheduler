@@ -8,6 +8,7 @@ from scheduler.core.config import settings
 engine = create_engine(settings.DATABASE_URL)
 SessionLocal = sessionmaker(bind=engine)
 
+
 @shared_task(name="scheduler.tasks.worker_tasks.run_task")
 def run_task(task_id: int, task_name: str, payload: dict, task_run_id: int):
     db = SessionLocal()
@@ -17,11 +18,9 @@ def run_task(task_id: int, task_name: str, payload: dict, task_run_id: int):
             return {"error": "TaskRun not found"}
 
         try:
-            # ---- YOUR TASK LOGIC ----
-            # Example: send message
+
             print(f"Running task '{task_name}' with payload: {payload}")
 
-            # Mark finished
             task_run.status = TaskStatus.finished
             task_run.finished_at = datetime.now(timezone.utc)
             db.commit()

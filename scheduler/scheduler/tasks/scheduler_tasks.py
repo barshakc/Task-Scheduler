@@ -12,38 +12,38 @@ from sqlalchemy.exc import IntegrityError
 engine = create_engine(settings.DATABASE_URL)
 SessionLocal = sessionmaker(bind=engine)
 
+
 @shared_task(name="scheduler.tasks.scheduler_tasks.poll_and_schedule_tasks")
 def poll_and_schedule_tasks():
     db = SessionLocal()
     try:
         now = datetime.now(timezone.utc)
-        # Get active tasks that should run
-        active_tasks = db.query(Task).filter(
-            Task.status == TaskStatus.active,
-            Task.next_run <= now
-        ).all()
+
+        active_tasks = (
+            db.query(Task)
+            .filter(Task.status == TaskStatus.active, Task.next_run <= now)
+            .all()
+        )
 
         for task in active_tasks:
-            # Skip if already running
-            active_run = db.query(TaskRun).filter(
-                TaskRun.task_id == task.id,
-                TaskRun.status == TaskStatus.active
-            ).first()
+
+            active_run = (
+                db.query(TaskRun)
+                .filter(TaskRun.task_id == task.id, TaskRun.status == TaskStatus.active)
+                .first()
+            )
             if active_run:
                 continue
 
             try:
-                # Create TaskRun
+
                 task_run = TaskRun(
-                    task_id=task.id,
-                    user_id=task.user_id,
-                    status=TaskStatus.active
+                    task_id=task.id, user_id=task.user_id, status=TaskStatus.active
                 )
                 db.add(task_run)
                 db.commit()
                 db.refresh(task_run)
 
-                # Send task to worker
                 result = run_task.apply_async(
                     kwargs={
                         "task_id": task.id,
@@ -56,7 +56,6 @@ def poll_and_schedule_tasks():
                 task_run.celery_task_id = result.id
                 db.commit()
 
-                # Update next_run
                 if task.schedule_type.name == "interval":
                     task.next_run = now + timedelta(seconds=int(task.schedule_value))
                 elif task.schedule_type.name == "cron":

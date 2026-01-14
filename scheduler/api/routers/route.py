@@ -17,10 +17,12 @@ router = APIRouter(tags=["Tasks"])
 
 
 @router.post("/tasks")
-def create_task(task: TaskCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    """
-    Create a new task for the current user.
-    """
+def create_task(
+    task: TaskCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+
     db_task = TaskModel(
         name=task.name,
         description=task.description,
@@ -38,6 +40,7 @@ def create_task(task: TaskCreate, db: Session = Depends(get_db), current_user: U
     db.commit()
     db.refresh(db_task)
     return db_task
+
 
 @router.get("/tasks", response_model=List[Task])
 def get_tasks(
@@ -143,20 +146,26 @@ def delete_task(
 
 
 @router.post("/tasks/{task_id}/run")
-def trigger_task(task_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def trigger_task(
+    task_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
 
-    task = db.query(TaskModel).filter(
-        TaskModel.id == task_id,
-        TaskModel.user_id == current_user.id
-    ).first()
+    task = (
+        db.query(TaskModel)
+        .filter(TaskModel.id == task_id, TaskModel.user_id == current_user.id)
+        .first()
+    )
 
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
 
-    active_run = db.query(TaskRun).filter(
-        TaskRun.task_id == task.id,
-        TaskRun.status == TaskStatus.active
-    ).first()
+    active_run = (
+        db.query(TaskRun)
+        .filter(TaskRun.task_id == task.id, TaskRun.status == TaskStatus.active)
+        .first()
+    )
 
     if active_run:
         raise HTTPException(status_code=400, detail="Task already running")
@@ -208,4 +217,3 @@ def get_task_runs(
     )
 
     return runs
-
