@@ -190,11 +190,14 @@ def trigger_task(
         }
     )
 
+    
     task_run.celery_task_id = celery_result.id
     db.commit()
 
-    return {"task_run_id": task_run.id}
-
+    return {
+        "task_run_id": task_run.id,
+        "celery_task_id": celery_result.id
+    }
 
 @router.get("/tasks/{task_id}/runs", response_model=List[TaskRunSchema])
 def get_task_runs(

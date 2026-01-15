@@ -64,11 +64,16 @@ def poll_and_schedule_tasks():
                 db.commit()
 
                 if task.schedule_type.name == "interval":
-                    task.next_run = now + timedelta(seconds=int(task.schedule_value))
+                   task.next_run = now + timedelta(seconds=int(task.schedule_value))
                 elif task.schedule_type.name == "cron":
-                    task.next_run = task.get_next_cron_run(now)
+                   task.next_run = task.get_next_cron_run(now)
+                else:  
+                   task.next_run = None
+                   task.status = TaskStatus.finished
+
 
                 db.commit()
+                return {"task_run_id": task_run.id}
 
             except IntegrityError:
                 db.rollback()

@@ -1,7 +1,7 @@
 import streamlit as st
 import requests
 import json
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 API_URL = "http://localhost:8000"
 
@@ -10,9 +10,13 @@ if "token" not in st.session_state:
 if "user" not in st.session_state:
     st.session_state.user = None
 if "show_update_form" not in st.session_state:
-    st.session_state.show_update_form = {}  
+    st.session_state.show_update_form = {}
 
-headers = {"Authorization": f"Bearer {st.session_state.token}"} if st.session_state.token else {}
+headers = (
+    {"Authorization": f"Bearer {st.session_state.token}"}
+    if st.session_state.token
+    else {}
+)
 
 # SIDEBAR
 st.sidebar.title("Task Scheduler")
@@ -61,7 +65,7 @@ elif menu == "Dashboard":
         st.header(f"Welcome, {st.session_state.user}!")
 
         def fetch_tasks():
-            
+
             try:
                 r = requests.get(f"{API_URL}/tasks", headers=headers)
                 if r.status_code == 200:
@@ -74,9 +78,11 @@ elif menu == "Dashboard":
                 return []
 
         def refresh_task(task_id):
-           
+
             try:
-                updated_task = requests.get(f"{API_URL}/tasks/{task_id}", headers=headers).json()
+                updated_task = requests.get(
+                    f"{API_URL}/tasks/{task_id}", headers=headers
+                ).json()
                 return updated_task
             except Exception as e:
                 st.error(f"Failed to refresh task: {e}")
@@ -84,29 +90,47 @@ elif menu == "Dashboard":
 
         tasks = fetch_tasks()
 
-        
         st.subheader("Your Tasks")
         if tasks:
-            updated_tasks = []  
+            updated_tasks = []
             for task in tasks:
-         
-                status_color = "🟢" if task['status'] == "active" else "🟡" if task['status'] == "paused" else "🔴"
-                status_text = task['status'].capitalize()
-                prev_run = task.get("last_run") or "N/A"
-                next_run = task.get("next_run") or "N/A"
 
-                st.markdown(f"**{task['name']}** {status_color}  _(Status: {status_text})_  |  "
-                            f"Prev Run: {prev_run}  |  Next Run: {next_run}")
+                if task["status"] == "active":
+                    status_color = "🟢"
+                elif task["status"] == "paused":
+                    status_color = "🟡"
+                elif task["status"] == "finished":
+                    status_color = "⚪"
+                else:
+                    status_color = "🔴"
 
-                
-                col_run, col_pause, col_resume, col_delete, col_update, col_runs = st.columns(6)
+                status_text = task["status"].capitalize()
+
+                next_run = task.get("next_run")
+                if next_run is None or task["schedule_type"] == "once":
+                    next_run_display = "N/A"
+                else:
+                    next_run_display = next_run
+
+                st.markdown(
+                    f"**{task['name']}** {status_color}  _(Status: {status_text})_  |  "
+                    f"Next Run: {next_run_display}"
+                )
+
+                col_run, col_pause, col_resume, col_delete, col_update, col_runs = (
+                    st.columns(6)
+                )
 
                 with col_run:
                     if st.button("🔄", key=f"run_{task['id']}", help="Run Task Now"):
                         try:
-                            r = requests.post(f"{API_URL}/tasks/{task['id']}/run", headers=headers)
-                            st.success(f"Task triggered! Run ID: {r.json().get('task_run_id')}")
-                            updated = refresh_task(task['id'])
+                            r = requests.post(
+                                f"{API_URL}/tasks/{task['id']}/run", headers=headers
+                            )
+                            st.success(
+                                f"Task triggered! Run ID: {r.json().get('task_run_id')}"
+                            )
+                            updated = refresh_task(task["id"])
                             if updated:
                                 task.update(updated)
                         except Exception as e:
@@ -115,9 +139,11 @@ elif menu == "Dashboard":
                 with col_pause:
                     if st.button("⏸", key=f"pause_{task['id']}", help="Pause Task"):
                         try:
-                            r = requests.patch(f"{API_URL}/tasks/{task['id']}/pause", headers=headers)
+                            r = requests.patch(
+                                f"{API_URL}/tasks/{task['id']}/pause", headers=headers
+                            )
                             st.success("Task paused!")
-                            updated = refresh_task(task['id'])
+                            updated = refresh_task(task["id"])
                             if updated:
                                 task.update(updated)
                         except Exception as e:
@@ -126,9 +152,11 @@ elif menu == "Dashboard":
                 with col_resume:
                     if st.button("▶️", key=f"resume_{task['id']}", help="Resume Task"):
                         try:
-                            r = requests.patch(f"{API_URL}/tasks/{task['id']}/resume", headers=headers)
+                            r = requests.patch(
+                                f"{API_URL}/tasks/{task['id']}/resume", headers=headers
+                            )
                             st.success("Task resumed!")
-                            updated = refresh_task(task['id'])
+                            updated = refresh_task(task["id"])
                             if updated:
                                 task.update(updated)
                         except Exception as e:
@@ -137,39 +165,61 @@ elif menu == "Dashboard":
                 with col_delete:
                     if st.button("❌", key=f"delete_{task['id']}", help="Delete Task"):
                         try:
-                            r = requests.delete(f"{API_URL}/tasks/{task['id']}", headers=headers)
+                            r = requests.delete(
+                                f"{API_URL}/tasks/{task['id']}", headers=headers
+                            )
                             st.success("Task deleted!")
-                            continue  
+                            continue
                         except Exception as e:
                             st.error(f"Failed to delete task: {e}")
 
                 with col_update:
-                    if st.button("✏️", key=f"update_btn_{task['id']}", help="Update Task"):
-                        st.session_state.show_update_form[task['id']] = not st.session_state.show_update_form.get(task['id'], False)
+                    if st.button(
+                        "✏️", key=f"update_btn_{task['id']}", help="Update Task"
+                    ):
+                        st.session_state.show_update_form[task["id"]] = (
+                            not st.session_state.show_update_form.get(task["id"], False)
+                        )
 
                 with col_runs:
                     if st.button("📜", key=f"runs_{task['id']}", help="Show Task Runs"):
                         try:
-                            runs = requests.get(f"{API_URL}/tasks/{task['id']}/runs", headers=headers).json()
+                            runs = requests.get(
+                                f"{API_URL}/tasks/{task['id']}/runs", headers=headers
+                            ).json()
                             if not runs:
                                 st.info("No runs yet")
                             else:
                                 for run in runs:
-                                    run_color = "🟢" if run["status"] == "finished" else "🟡" if run["status"] == "active" else "🔴"
-                                    st.markdown(f"{run_color} Run ID: {run['id']} | Status: {run['status']} | "
-                                                f"Started: {run['started_at']} | Finished: {run['finished_at']}")
+                                    run_color = (
+                                        "🟢"
+                                        if run["status"] == "finished"
+                                        else "🟡" if run["status"] == "active" else "🔴"
+                                    )
+                                    st.markdown(
+                                        f"{run_color} Run ID: {run['id']} | Status: {run['status']} | "
+                                        f"Started: {run['started_at']} | Finished: {run['finished_at']}"
+                                    )
                         except Exception as e:
                             st.error(f"Failed to fetch runs: {e}")
 
-            
-                if st.session_state.show_update_form.get(task['id']):
+                if st.session_state.show_update_form.get(task["id"]):
                     with st.form(f"update_form_{task['id']}"):
-                        new_name = st.text_input("Task Name", value=task['name'])
-                        new_description = st.text_area("Description", value=task['description'])
-                        new_schedule_type = st.selectbox("Schedule Type", ["once", "interval"], 
-                                                         index=0 if task['schedule_type']=='once' else 1)
-                        new_schedule_value = st.text_input("Schedule Value", value=task['schedule_value'])
-                        new_payload = st.text_area("Payload JSON", value=json.dumps(task['payload']))
+                        new_name = st.text_input("Task Name", value=task["name"])
+                        new_description = st.text_area(
+                            "Description", value=task["description"]
+                        )
+                        new_schedule_type = st.selectbox(
+                            "Schedule Type",
+                            ["once", "interval"],
+                            index=0 if task["schedule_type"] == "once" else 1,
+                        )
+                        new_schedule_value = st.text_input(
+                            "Schedule Value", value=task["schedule_value"]
+                        )
+                        new_payload = st.text_area(
+                            "Payload JSON", value=json.dumps(task["payload"])
+                        )
                         submitted = st.form_submit_button("Update Task")
                         if submitted:
                             try:
@@ -179,12 +229,16 @@ elif menu == "Dashboard":
                                     "description": new_description,
                                     "schedule_type": new_schedule_type,
                                     "schedule_value": new_schedule_value,
-                                    "payload": payload_dict
+                                    "payload": payload_dict,
                                 }
-                                r = requests.patch(f"{API_URL}/tasks/{task['id']}", json=data, headers=headers)
+                                r = requests.patch(
+                                    f"{API_URL}/tasks/{task['id']}",
+                                    json=data,
+                                    headers=headers,
+                                )
                                 if r.status_code == 200:
                                     st.success("Task updated successfully!")
-                                    updated = refresh_task(task['id'])
+                                    updated = refresh_task(task["id"])
                                     if updated:
                                         task.update(updated)
                                 else:
@@ -194,37 +248,63 @@ elif menu == "Dashboard":
 
                 st.markdown("---")
                 updated_tasks.append(task)
-            tasks = updated_tasks  
+                tasks = updated_tasks
         else:
             st.info("No tasks yet.")
 
+        NEPAL_TZ_OFFSET = timedelta(hours=5, minutes=45)
         st.subheader("Create New Task")
         with st.form("create_task_form"):
             name = st.text_input("Task Name")
-            description = st.text_area("Description")
-            schedule_type = st.selectbox("Schedule Type", ["once", "interval"])
-            schedule_value = st.text_input("Schedule Value")
-            payload = st.text_area("Payload (JSON)", "{}")
-            max_runs = st.number_input("Max Runs (leave empty for unlimited)", min_value=1, step=1, value=1)
+            description = st.text_area("Description (optional)")
 
+            schedule_type = st.selectbox("Schedule Type", ["once", "interval"])
+
+            if schedule_type == "once":
+                run_date = st.date_input("Run Date")
+                run_time = st.time_input("Run Time")
+
+                nepali_datetime = datetime.combine(run_date, run_time)
+
+                schedule_value = (nepali_datetime - NEPAL_TZ_OFFSET).isoformat()
+            else:
+                schedule_value = st.number_input(
+                    "Interval in seconds", min_value=1, step=1, value=3600
+                )
+
+            st.markdown("**Email Details**")
+            recipient = st.text_input("Recipient Email")
+            subject = st.text_input("Email Subject", f"Reminder: {name}")
+            message = st.text_area("Message", "Write your reminder here...")
+
+            max_runs = st.number_input(
+                "Max Runs (leave empty for unlimited)", min_value=1, step=1, value=1
+            )
 
             submitted = st.form_submit_button("Create Task")
+
             if submitted:
                 try:
-                    payload_dict = json.loads(payload)
+
+                    payload_dict = {
+                        "recipient": recipient,
+                        "subject": subject,
+                        "message": message,
+                    }
+
                     data = {
                         "name": name,
                         "description": description,
                         "schedule_type": schedule_type,
                         "schedule_value": schedule_value,
                         "max_runs": max_runs,
-                        "payload": payload_dict
+                        "payload": payload_dict,
                     }
+
                     r = requests.post(f"{API_URL}/tasks", json=data, headers=headers)
                     if r.status_code in [200, 201]:
                         st.success(f"Task '{name}' created successfully!")
-                        tasks = fetch_tasks()  
                     else:
                         st.error(f"Failed to create task: {r.text}")
                 except Exception as e:
-                    st.error(f"Invalid payload JSON or request failed: {e}")
+                    st.error(f"Failed to create task: {e}")
