@@ -1,2 +1,14 @@
 venv/
 .env
+celerybeat-schedule.bak
+celerybeat-schedule.dat
+celerybeat-schedule.dir
+__pycache__/
+*.pyc
+instance/
+.DS_Store
+migrations/
+*.sqlite3
+*.log
+.vscode/
+.alembic/
