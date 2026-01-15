@@ -22,11 +22,10 @@ menu = st.sidebar.selectbox("Menu", ["Register", "Login", "Dashboard"])
 if menu == "Register":
     st.header("Register")
     username = st.text_input("Username")
-    email = st.text_input("Email")
     password = st.text_input("Password", type="password")
     if st.button("Register"):
         try:
-            data = {"username": username, "email": email, "password": password}
+            data = {"username": username, "password": password}
             r = requests.post(f"{API_URL}/register", json=data)
             if r.status_code in [200, 201]:
                 st.success("Registered successfully! Please login.")
@@ -38,7 +37,7 @@ if menu == "Register":
 # LOGIN PAGE
 elif menu == "Login":
     st.header("Login")
-    username = st.text_input("Username or Email")
+    username = st.text_input("Username")
     password = st.text_input("Password", type="password")
     if st.button("Login"):
         try:

@@ -56,7 +56,8 @@ def poll_and_schedule_tasks():
                         "task_name": task.name,
                         "payload": task.payload,
                         "task_run_id": task_run.id,
-                    }
+                    },
+                    eta=task.next_run,
                 )
 
                 task_run.celery_task_id = result.id

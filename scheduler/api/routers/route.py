@@ -34,7 +34,7 @@ def create_task(
         max_runs=task.max_runs, 
         status=TaskStatus.active,
         user_id=current_user.id,
-        next_run=datetime.now(timezone.utc),  # first run immediately
+        next_run=datetime.now(timezone.utc),  
     )
 
     db.add(db_task)
