@@ -2,8 +2,11 @@ import streamlit as st
 import requests
 import json
 from datetime import datetime, timedelta, timezone
+import pytz
 
-API_URL = "http://localhost:8000"
+API_URL = "http://api:8000"
+
+NEPAL_TZ = pytz.timezone("Asia/Kathmandu")
 
 if "token" not in st.session_state:
     st.session_state.token = None
@@ -252,7 +255,6 @@ elif menu == "Dashboard":
         else:
             st.info("No tasks yet.")
 
-        NEPAL_TZ_OFFSET = timedelta(hours=5, minutes=45)
         st.subheader("Create New Task")
         with st.form("create_task_form"):
             name = st.text_input("Task Name")
@@ -264,47 +266,54 @@ elif menu == "Dashboard":
                 run_date = st.date_input("Run Date")
                 run_time = st.time_input("Run Time")
 
-                nepali_datetime = datetime.combine(run_date, run_time)
+                # Combine date + time
+                nepali_naive = datetime.combine(run_date, run_time)
 
-                schedule_value = (nepali_datetime - NEPAL_TZ_OFFSET).isoformat()
+                # Localize to Nepal timezone
+                nepali_aware = NEPAL_TZ.localize(nepali_naive)
+
+                # Convert to UTC
+                utc_datetime = nepali_aware.astimezone(pytz.UTC)
+
+                # Send ISO formatted UTC datetime to API
+                schedule_value = utc_datetime.isoformat()
             else:
                 schedule_value = st.number_input(
                     "Interval in seconds", min_value=1, step=1, value=3600
                 )
 
-            st.markdown("**Email Details**")
-            recipient = st.text_input("Recipient Email")
-            subject = st.text_input("Email Subject", f"Reminder: {name}")
-            message = st.text_area("Message", "Write your reminder here...")
+        st.markdown("**Email Details**")
+        recipient = st.text_input("Recipient Email")
+        subject = st.text_input("Email Subject", f"Reminder: {name}")
+        message = st.text_area("Message", "Write your reminder here...")
 
-            max_runs = st.number_input(
-                "Max Runs (leave empty for unlimited)", min_value=1, step=1, value=1
-            )
+        max_runs = st.number_input(
+            "Max Runs (leave empty for unlimited)", min_value=1, step=1, value=1
+        )
 
-            submitted = st.form_submit_button("Create Task")
+        submitted = st.form_submit_button("Create Task")
 
-            if submitted:
-                try:
+        if submitted:
+            try:
+                payload_dict = {
+                    "recipient": recipient,
+                    "subject": subject,
+                    "message": message,
+                }
 
-                    payload_dict = {
-                        "recipient": recipient,
-                        "subject": subject,
-                        "message": message,
-                    }
+                data = {
+                    "name": name,
+                    "description": description,
+                    "schedule_type": schedule_type,
+                    "schedule_value": schedule_value,
+                    "max_runs": max_runs,
+                    "payload": payload_dict,
+                }
 
-                    data = {
-                        "name": name,
-                        "description": description,
-                        "schedule_type": schedule_type,
-                        "schedule_value": schedule_value,
-                        "max_runs": max_runs,
-                        "payload": payload_dict,
-                    }
-
-                    r = requests.post(f"{API_URL}/tasks", json=data, headers=headers)
-                    if r.status_code in [200, 201]:
-                        st.success(f"Task '{name}' created successfully!")
-                    else:
-                        st.error(f"Failed to create task: {r.text}")
-                except Exception as e:
-                    st.error(f"Failed to create task: {e}")
+                r = requests.post(f"{API_URL}/tasks", json=data, headers=headers)
+                if r.status_code in [200, 201]:
+                    st.success(f"Task '{name}' created successfully!")
+                else:
+                    st.error(f"Failed to create task: {r.text}")
+            except Exception as e:
+                st.error(f"Failed to create task: {e}")

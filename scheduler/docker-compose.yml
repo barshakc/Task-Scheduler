@@ -1,0 +1,79 @@
+services:
+  postgres_db:
+    image: postgres:15
+    container_name: postgres_db
+    restart: always
+    environment:
+      POSTGRES_USER: task_user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: task_scheduler
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U task_user"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+
+  api:
+    build: .
+    container_name: task_api
+    env_file: .env
+    ports:
+      - "8000:8000"
+    command: bash -c "alembic upgrade head && uvicorn api.main:app --host 0.0.0.0 --port 8000"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - .:/app
+
+  celery_worker:
+    build: .
+    container_name: celery_worker
+    env_file: .env
+    command: bash -c "alembic upgrade head && celery -A scheduler.celery_app.celery_app worker --loglevel=info"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  celery_beat:
+    build: .
+    container_name: celery_beat
+    env_file: .env
+    command: bash -c "alembic upgrade head && celery -A scheduler.celery_app.celery_app beat --loglevel=info"
+    volumes:
+      - ./celerybeat-data:/app/celerybeat-data
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  streamlit:
+    build: .
+    container_name: task_dashboard
+    env_file: .env
+    command: streamlit run dashboard.py --server.port=8501 --server.address=0.0.0.0
+    ports:
+      - "8501:8501"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

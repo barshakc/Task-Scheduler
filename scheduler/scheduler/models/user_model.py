@@ -3,7 +3,6 @@ from sqlalchemy.orm import relationship
 from scheduler.db.database import Base
 from passlib.hash import bcrypt
 
-
 class User(Base):
     __tablename__ = "users"
 
