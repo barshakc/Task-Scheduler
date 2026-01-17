@@ -9,7 +9,6 @@ class TaskCreate(BaseModel):
     schedule_type: ScheduleType
     schedule_value: str
     max_runs: int | None = None   
-    next_run: datetime | None = None 
     max_retries: int = 0
     retry_delay: int = 0
     payload: dict

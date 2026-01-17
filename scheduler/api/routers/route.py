@@ -5,13 +5,13 @@ from sqlalchemy.orm import Session
 from scheduler.db.database import get_db
 from scheduler.models.task_model import Task as TaskModel
 from api.schemas.tasks import TaskCreate, TaskUpdate, Task
-from scheduler.models.enums import TaskStatus
+from scheduler.models.enums import TaskStatus, ScheduleType
 from api.auth_utils import get_current_user
 from scheduler.models.user_model import User
 from scheduler.tasks.worker_tasks import run_task
 from scheduler.models.task_run_model import TaskRun
 from api.schemas.task_runs import TaskRun as TaskRunSchema
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 router = APIRouter(tags=["Tasks"])
 
@@ -22,6 +22,21 @@ def create_task(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    now = datetime.now(timezone.utc)
+
+    if task.schedule_type == ScheduleType.once:
+        scheduled_time = datetime.fromisoformat(task.schedule_value)
+        if scheduled_time.tzinfo is None:
+            scheduled_time = scheduled_time.replace(tzinfo=timezone.utc)
+        next_run = scheduled_time
+
+    elif task.schedule_type == ScheduleType.interval:
+        next_run = now + timedelta(seconds=int(task.schedule_value))
+
+    else:  
+        next_run = None
+
+    status = TaskStatus.active if next_run and next_run > now else TaskStatus.finished
 
     db_task = TaskModel(
         name=task.name,
@@ -32,16 +47,15 @@ def create_task(
         retry_delay=task.retry_delay,
         payload=task.payload,
         max_runs=task.max_runs, 
-        status=TaskStatus.active,
+        status=status,
         user_id=current_user.id,
-        next_run=datetime.now(timezone.utc),  
+        next_run=next_run,
     )
 
     db.add(db_task)
     db.commit()
     db.refresh(db_task)
     return db_task
-
 
 @router.get("/tasks", response_model=List[Task])
 def get_tasks(

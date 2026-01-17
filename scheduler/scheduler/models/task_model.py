@@ -21,9 +21,8 @@ class Task(Base):
     status = Column(Enum(TaskStatus), default=TaskStatus.active)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     next_run = Column(
-        DateTime(timezone=True),
-        nullable=True,
-        default=lambda: datetime.now(timezone.utc),
+      DateTime(timezone=True),
+      nullable=True,
     )
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
 

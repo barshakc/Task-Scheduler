@@ -2,7 +2,6 @@ from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
 import os
 
-# Ensure .env is loaded (useful for Celery and Streamlit)
 load_dotenv()
 
 class Settings(BaseSettings):
