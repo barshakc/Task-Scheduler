@@ -17,7 +17,7 @@ This is a task scheduler system designed for scheduling, executing, and monitori
 ## Architecture
 
 ```
-[Streamlit Dashboard] <--> [FastAPI API] <--> [Database: SQLAlchemy]
+[Streamlit Dashboard] <--> [FastAPI API] <--> [PostgreSQL Database]
                                 |
                                 v
                            [Celery Beat] ---> [Celery Worker]
@@ -34,13 +34,14 @@ This is a task scheduler system designed for scheduling, executing, and monitori
 
 * Docker & Docker Compose
 * Python 3.10+
+* PostgreSQL
 
 ### Steps
 
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/task-scheduler.git
+git clone https://github.com/barshakc/Task-Scheduler.git
 ```
 
 2. Navigate to the project directory:
@@ -70,7 +71,7 @@ The project is fully dockerized with separate services for API, Celery workers, 
   * FastAPI API
   * Celery Worker
   * Streamlit Dashboard
-* **Environment Variables**: Configure database URL, email credentials, and other settings in `.env` file.
+* **Environment Variables**: Configure PostgreSQL database URL, email credentials, and other settings in `.env` file.
 
 ### Docker Commands
 
@@ -100,19 +101,27 @@ docker-compose run api python manage.py migrate
 
 ## Deployment
 
-For production deployment, follow these steps:
+For production deployment with PostgreSQL, follow these steps:
 
 1. **Prepare Environment Variables**
 
    * Create a `.env.prod` file with production configurations, including:
 
-     * `DATABASE_URL`
+     * `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`
+     * `DATABASE_URL` (e.g., `postgresql://user:password@db:5432/dbname`)
      * `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USER`, `EMAIL_PASSWORD`, `EMAIL_FROM`
      * `JWT_SECRET_KEY`
 
 2. **Persistent Storage**
 
-   * Map a volume for your database container to persist task and user data.
+   * Map a Docker volume for PostgreSQL to persist task and user data.
+   * Example in `docker-compose.prod.yml`:
+
+```yaml
+volumes:
+  postgres_data:
+    driver: local
+```
 
 3. **Start Services in Detached Mode**
 
@@ -176,4 +185,5 @@ Contributions are welcome! Steps:
 
 MIT License. See LICENSE file for details.
 
-*Efficiently schedule, monitor, and execute tasks with a full-stack Python scheduler.*
+
+*Efficiently schedule, monitor, and execute tasks with a full-stack Python scheduler using PostgreSQL.*
