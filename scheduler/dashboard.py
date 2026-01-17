@@ -239,7 +239,7 @@ elif menu == "Dashboard":
             st.markdown("**Email Details**")
             recipient = st.text_input("Recipient Email")
             subject = st.text_input("Email Subject", f"Reminder: {name}")
-            message = st.text_area("Message", "Write your reminder here...")
+            message = st.text_area("Message", "")
             max_runs = st.number_input(
                 "Max Runs (leave empty for unlimited)", min_value=1, step=1, value=1
             )
