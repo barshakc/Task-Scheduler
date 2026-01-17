@@ -9,4 +9,4 @@ migrations/
 *.log
 .vscode/
 alembic.ini
-celerybeat-data
+celerybeat-data/
